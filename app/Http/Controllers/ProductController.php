@@ -56,9 +56,9 @@ class ProductController extends Controller
                         } 
                         return $status;
                     })
-                    ->addColumn('action', function () {                       
-                            $status = '<a href="javascript:void(0)" data-toggle="modal" class="btn button-default-custom btn-approve-custom" data-target="#approve" >Edit</a>';
-                            return $status .= '&nbsp;&nbsp;<a href="javascript:void(0)" data-toggle="modal" class="btn button-default-custom btn-deny-custom" data-target="#deny">Delete</a>';                        
+                    ->addColumn('action', function ($productList) {                       
+                            $status = '<a href="javascript:void(0)" data-toggle="modal" class="btn button-default-custom btn-approve-custom" data-target="#addproduct" onclick ="editProduct('.$productList->id.')" >Edit</a>';
+                            return $status .= '&nbsp;&nbsp;<a href="javascript:void(0)" data-toggle="modal" class="btn button-default-custom btn-deny-custom" data-target="#delete" onclick = "deleteProduct('.$productList->id.')">Delete</a>';                        
                     })
                     ->rawColumns(['id','product_name', 'price','status','action'])
                     ->make(true);
@@ -68,8 +68,52 @@ class ProductController extends Controller
                         
                         
         }
-        return view('productlist');
-    
-}
+        return view('productlist');    
+    }
+
+    public function saveProduct(Request $request) {
+        try {            
+            if ($request->id) {
+                $product = [
+                    'product_name' => $request->product_name,
+                    'price' => $request->price,                   
+                    'status' => $request->status
+                ];              
+                Product::where('id',$request->id)->update($product);                
+            } else {
+                $product = new Product([
+                    'product_name' => $request->product_name,
+                    'price' => $request->price,                   
+                    'status' => $request->status
+                ]);
+                $product->save();
+            }           
+           
+            return response()->json(['success'=>true,'message'=>'Product saved successfully']);
+        } catch (\Throwable $th) {
+            return response()->json(['success'=>false,'error'=>$th->getMessage()]);
+        } 
+    }
+
+    public function getproduct(Request $request) {
+        $id = $request->id;
+        try {
+            $findProduct = Product::where('id', $id)->first();           
+            return response()->json(['success'=>true,'product'=>$findProduct]);
+        } catch (\Throwable $th) {
+            return response()->json(['success'=>false,'error'=>$th->getMessage()]);
+        }
+    }
+
+    public function deleteProduct(Request $request) {
+        $id = $request->id;
+        try {           
+            $customer = Product::find($id);
+            $customer->delete();           
+            return response()->json(['success'=>true]);
+        } catch (\Throwable $th) {
+            return response()->json(['success'=>false,'error'=>$th->getMessage()]);
+        }
+    }
     
 }

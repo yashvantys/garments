@@ -25,11 +25,15 @@ Route::get('/dashboard', [
     'uses' => 'App\Http\Controllers\DashboardController@index',
     'as' => 'customer-listing'
   ]);
-  Route::post('/product', [App\Http\Controllers\ProductController::class, 'index'])->name('list');
-  Route::get('/product', [
+Route::post('/customersave', [App\Http\Controllers\DashboardController::class, 'saveCustomer'])->name('customersave');
+Route::post('/getcustomer', [App\Http\Controllers\DashboardController::class, 'getcustomer'])->name('getcustomer');
+Route::post('/customerdelete', [App\Http\Controllers\DashboardController::class, 'deleteCustomer'])->name('customerdelete');
+Route::post('/product', [App\Http\Controllers\ProductController::class, 'index'])->name('list');
+Route::get('/product', [
       'uses' => 'App\Http\Controllers\ProductController@index',
       'as' => 'product-listing'
     ]);
-  Route::post('/customersave', [App\Http\Controllers\DashboardController::class, 'saveCustomer'])->name('customersave');
-  Route::post('/getcustomer', [App\Http\Controllers\DashboardController::class, 'getcustomer'])->name('getcustomer');
-  Route::post('/customerdelete', [App\Http\Controllers\DashboardController::class, 'deleteCustomer'])->name('customerdelete');
+Route::post('/productsave', [App\Http\Controllers\ProductController::class, 'saveProduct'])->name('productsave');
+Route::post('/getproducr', [App\Http\Controllers\ProductController::class, 'getproduct'])->name('getproduct');
+Route::post('/productdelete', [App\Http\Controllers\ProductController::class, 'deleteProduct'])->name('productdelete');
+  

@@ -50,13 +50,13 @@
                 <div class="modal-body">
                     <label class="radio">First Name:</label>                    
                     <div class="input-group position-relative dollar-control">                    
-                        <input type="text" class="form-control form-control-dollar" id="first_name" name="first_name" aria-describedby="dollar" placeholder="First name">
+                        <input type="text" class="form-control form-control-dollar" id="first_name" name="first_name" aria-describedby="dollar" placeholder="First Name">
                     </div>                
                 </div>
                 <div class="modal-body">
                     <label class="radio">Last Name:</label>                    
                     <div class="input-group position-relative dollar-control">                    
-                        <input type="text" class="form-control form-control-dollar" id="last_name" name="last_name" aria-describedby="dollar" placeholder="Last name">
+                        <input type="text" class="form-control form-control-dollar" id="last_name" name="last_name" aria-describedby="dollar" placeholder="Last Name">
                     </div>                
                 </div>
                 <div class="modal-body">
