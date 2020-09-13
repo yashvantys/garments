@@ -58,9 +58,9 @@ class DashboardController extends Controller
                         } 
                         return $status;
                     })
-                    ->addColumn('action', function () {                       
-                            $status = '<a href="javascript:void(0)" data-toggle="modal" class="btn button-default-custom btn-approve-custom" data-target="#approve" >Edit</a>';
-                            return $status .= '&nbsp;&nbsp;<a href="javascript:void(0)" data-toggle="modal" class="btn button-default-custom btn-deny-custom" data-target="#deny">Delete</a>';                        
+                    ->addColumn('action', function ($customerList) {                       
+                            $status = '<a href="javascript:void(0)" data-toggle="modal" class="btn button-default-custom btn-approve-custom" data-target="#addcustomer" onclick ="editCustomer('.$customerList->id.')">Edit</a>';
+                            return $status .= '&nbsp;&nbsp;<a href="javascript:void(0)" data-toggle="modal" class="btn button-default-custom btn-deny-custom" data-target="#delete" onclick = "deleteCustomer('.$customerList->id.')">Delete</a>';                        
                     })
                     ->rawColumns(['id','first_name', 'last_name','email', 'status','action'])
                     ->make(true);
@@ -70,8 +70,55 @@ class DashboardController extends Controller
                         
                         
         }
-        return view('dashboard');
-    
-}
+        return view('dashboard');    
+    }
+    public function saveCustomer(Request $request) {
+        try {            
+            if ($request->id) {
+                $customer = [
+                    'first_name' => $request->first_name,
+                    'last_name' => $request->last_name,
+                    'email' => $request->email,
+                    'phone' => $request->phone,
+                    'status' => $request->status
+                ];              
+                Customer::where('id',$request->id)->update($customer);                
+            } else {
+                $customer = new Customer([
+                    'first_name' => $request->first_name,
+                    'last_name' => $request->last_name,
+                    'email' => $request->email,
+                    'phone' => $request->phone,
+                    'status' => $request->status
+                ]);
+                $customer->save();
+            }           
+           
+            return response()->json(['success'=>true,'message'=>'Customer saved successfully']);
+        } catch (\Throwable $th) {
+            return response()->json(['success'=>false,'error'=>$th->getMessage()]);
+        } 
+    }
+
+    public function getcustomer(Request $request) {
+        $id = $request->id;
+        try {
+            $findCustomer = Customer::where('id', $id)->first();           
+            return response()->json(['success'=>true,'customer'=>$findCustomer]);
+        } catch (\Throwable $th) {
+            return response()->json(['success'=>false,'error'=>$th->getMessage()]);
+        }
+    }
+
+    public function deleteCustomer(Request $request) {
+        $id = $request->id;
+        try {           
+            $customer = Customer::find($id);
+            $customer->delete();           
+            return response()->json(['success'=>true]);
+        } catch (\Throwable $th) {
+            return response()->json(['success'=>false,'error'=>$th->getMessage()]);
+        }
+    }
     
 }

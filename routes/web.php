@@ -30,3 +30,6 @@ Route::get('/dashboard', [
       'uses' => 'App\Http\Controllers\ProductController@index',
       'as' => 'product-listing'
     ]);
+  Route::post('/customersave', [App\Http\Controllers\DashboardController::class, 'saveCustomer'])->name('customersave');
+  Route::post('/getcustomer', [App\Http\Controllers\DashboardController::class, 'getcustomer'])->name('getcustomer');
+  Route::post('/customerdelete', [App\Http\Controllers\DashboardController::class, 'deleteCustomer'])->name('customerdelete');

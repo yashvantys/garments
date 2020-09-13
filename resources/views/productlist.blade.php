@@ -6,10 +6,10 @@
 <div id="content">
     <div class="container-fluid">
         <!-- Page Heading -->
-        <h1 class="mb-2 title-page">Product List</h1>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras vestibulum, dui eget sagittis euismod, metus nulla volutpat ipsum, sit amet eleifend augue metus id nisl. Nulla luctus metus id nibh mollis maximus.</p>
+        <h1 class="mb-2 title-page">Product List</h1>        
         <div class="card shadow mb-4">            
             <div class="card-body">
+            <a href="javascript:void(0)" data-toggle="modal" class="btn button-default-custom btn-approve-custom" data-target="#addproduct" >Add Product</a>'
                 <div class="table-responsive">
                 <table id="productlist" class="booking-table table display">
                 <caption></caption>                
@@ -30,43 +30,37 @@
 </div>
 </div>
 <script>
-                    
-    
-        $(document).ready(function() {
-            productlist();
-            var dataTable;
-            function productlist(){                
-                $.ajaxSetup({
-                            headers: {
-                                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                            }
-                        });
-                dataTable = $('#productlist').DataTable({
-                    processing: true,
-                    serverSide: true,
-                    order: [],
-                    aLengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
-                    iDisplayLength: 10,
-                    ajax: {
-                        url: '{{route('product-listing')}}',
-                        method: 'POST'                        
-                    },                   
-                    columns: [                        
-                        { "data": "product_name", "name": "Product Name"},
-                        { "data": "price", "name": "Price"},                                                                  
-                        { "data": "status",  "name": "status"},
-                        { "data": "action",  "name": "action", "className":'action-control'},                       
-                    ],
-                    pageLength: 10,
-                });
-            }
-            $("#searchbox").keyup(function() {
-                $('#productlist').dataTable().fnFilter(this.value);
+    $(document).ready(function() {
+        productlist();
+        var dataTable;
+        function productlist(){                
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
             });
-            
-
-            
+            dataTable = $('#productlist').DataTable({
+                processing: true,
+                serverSide: true,
+                order: [],
+                aLengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+                iDisplayLength: 10,
+                ajax: {
+                    url: '{{route('product-listing')}}',
+                    method: 'POST'                        
+                },                   
+                columns: [                        
+                    { "data": "product_name", "name": "Product Name"},
+                    { "data": "price", "name": "Price"},                                                                  
+                    { "data": "status",  "name": "status"},
+                    { "data": "action",  "name": "action", "className":'action-control'},                       
+                ],
+                pageLength: 10,
+            });
+        }
+        $("#searchbox").keyup(function() {
+            $('#productlist').dataTable().fnFilter(this.value);
         });
-
-    </script>
+    });
+</script>
 @endsection
