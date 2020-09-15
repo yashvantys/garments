@@ -34,6 +34,15 @@ Route::get('/product', [
       'as' => 'product-listing'
     ]);
 Route::post('/productsave', [App\Http\Controllers\ProductController::class, 'saveProduct'])->name('productsave');
-Route::post('/getproducr', [App\Http\Controllers\ProductController::class, 'getproduct'])->name('getproduct');
+Route::post('/getproduct', [App\Http\Controllers\ProductController::class, 'getproduct'])->name('getproduct');
 Route::post('/productdelete', [App\Http\Controllers\ProductController::class, 'deleteProduct'])->name('productdelete');
+
+Route::post('/inventory', [App\Http\Controllers\InventoryController::class, 'index'])->name('list');
+Route::get('/inventory', [
+      'uses' => 'App\Http\Controllers\InventoryController@index',
+      'as' => 'inventory-listing'
+    ]);
+Route::post('/inventorysave', [App\Http\Controllers\InventoryController::class, 'saveInventory'])->name('inventorysave');
+Route::post('/getinventory', [App\Http\Controllers\InventoryController::class, 'getinventory'])->name('getinventory');
+Route::post('/inventorydelete', [App\Http\Controllers\InventoryController::class, 'deleteInventory'])->name('inventorydelete');
   

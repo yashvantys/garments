@@ -18,6 +18,7 @@ class CreateTblCustomerTable extends Migration
             $table->string('first_name');
             $table->string('last_name');
             $table->string('email');
+            $table->string('phone');
             $table->enum('status', ['pending', 'approved', 'decline'])->default('approved');           
             $table->timestamps();
         });

@@ -8,10 +8,10 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use DB;
 
-class Product extends Authenticatable {
+class Inventory extends Authenticatable {
     use Notifiable;
     
-    protected $table = 'tbl_product';
+    protected $table = 'tbl_inventory';
 
     /**
      * The attributes that are mass assignable.
@@ -19,7 +19,7 @@ class Product extends Authenticatable {
      * @var array
      */
     protected $fillable = [
-        'product_name','price', 'status', '# id, product_name, price, status, created_at, updated_at'
+        'customer_id','product_id', 'qty','price', 'total', 'payment_mode', 'balance', '# id, customer_id, product_id, qty, price, total, payment_mode, balance, created_at, updated_at'
     ];
 
     // Rest omitted for brevity
@@ -28,12 +28,12 @@ class Product extends Authenticatable {
      * Get the identifier that will be stored in the subject claim of the JWT.
      *
      * @return mixed
-     */
-
-    public static function getProductData(){
-        return DB::table('tbl_product')->orderBy('id', 'asc')->get();       
-    }
+     */   
     
+    public static function getInventoryData(){
+        return DB::table('tbl_inventory')->orderBy('id', 'asc')->get();
+       
+    }
 
     
 }

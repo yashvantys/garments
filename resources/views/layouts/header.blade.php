@@ -88,6 +88,11 @@
                     <span class="fas fa-fw fa-tachometer-alt"></span>Product List
                 </a>
             </li>
+            <li class="nav-item {{ (request()->is('inventory')) ? 'active' : '' }}">
+                <a class="nav-link" href="{{ url('inventory')}}">
+                    <span class="fas fa-fw fa-tachometer-alt"></span>Inventory
+                </a>
+            </li>
             
         </ul>
         <!-- End of Sidebar -->
