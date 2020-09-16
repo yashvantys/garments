@@ -72,22 +72,24 @@ class InventoryController extends Controller
         return view('inventorylist');    
     }
 
-    public function saveProduct(Request $request) {
+    public function saveInventory(Request $request) {
         try {            
             if ($request->id) {
-                $product = [
-                    'product_name' => $request->product_name,
-                    'price' => $request->price,                   
-                    'status' => $request->status
+                $inventory = [
+                    'customer_id' => $request->customer_id,
+                    'product_id' => $request->product_id,
+                    'qty' =>$request->qty,                    
+                    'price' => $request->price
                 ];              
-                Product::where('id',$request->id)->update($product);                
+                Inventory::where('id',$request->id)->update($inventory);                
             } else {
-                $product = new Product([
-                    'product_name' => $request->product_name,
-                    'price' => $request->price,                   
-                    'status' => $request->status
+                $inventory = new Inventory([
+                    'customer_id' => $request->customer_id,
+                    'product_id' => $request->product_id,
+                    'qty' =>$request->qty,                    
+                    'price' => $request->price
                 ]);
-                $product->save();
+                $inventory->save();
             }           
            
             return response()->json(['success'=>true,'message'=>'Product saved successfully']);
@@ -99,18 +101,18 @@ class InventoryController extends Controller
     public function getproduct(Request $request) {
         $id = $request->id;
         try {
-            $findProduct = Product::where('id', $id)->first();           
-            return response()->json(['success'=>true,'product'=>$findProduct]);
+            $findInventory = Inventory::where('id', $id)->first();           
+            return response()->json(['success'=>true,'product'=>$findInventory]);
         } catch (\Throwable $th) {
             return response()->json(['success'=>false,'error'=>$th->getMessage()]);
         }
     }
 
-    public function deleteProduct(Request $request) {
+    public function deleteInventory(Request $request) {
         $id = $request->id;
         try {           
-            $customer = Product::find($id);
-            $customer->delete();           
+            $inventory = Inventory::find($id);
+            $inventory->delete();           
             return response()->json(['success'=>true]);
         } catch (\Throwable $th) {
             return response()->json(['success'=>false,'error'=>$th->getMessage()]);
