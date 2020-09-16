@@ -19,7 +19,7 @@ class Inventory extends Authenticatable {
      * @var array
      */
     protected $fillable = [
-        'customer_id','product_id', 'qty','price', 'total', 'payment_mode', 'balance', '# id, customer_id, product_id, qty, price, total, payment_mode, balance, created_at, updated_at'
+        'customer_id','product_id', 'qty','price', 'total', 'payment_mode', 'balance','status', '# id, customer_id, product_id, qty, price, total, payment_mode, balance, status, created_at, updated_at'
     ];
 
     // Rest omitted for brevity
@@ -33,6 +33,16 @@ class Inventory extends Authenticatable {
     public static function getInventoryData(){
         return DB::table('tbl_inventory')->orderBy('id', 'asc')->get();
        
+    }
+
+    public function customer()
+    {        
+        return $this->hasOne(Customer::class,'id', 'customer_id');
+    }
+
+    public function product()
+    {
+        return $this->hasOne(Product::class,'id','product_id');
     }
 
     

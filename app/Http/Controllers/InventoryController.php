@@ -30,37 +30,50 @@ class InventoryController extends Controller
         if($request->ajax())
         {             
             try {            
-                $inventoryList = Inventory::getInventoryData();    
-                           
+                //$inventoryList = Inventory::getInventoryData();
+                
+                $inventoryList = Inventory::with(['customer','product'])
+                //->select('inventory.id','inventory.qty', 'inventory.price','inventory.total', 'inventory.total', 'inventory.payment_mode','inventory.balance', 'customer.first_name','customer.last_name','customer.email','customer.phone','product.product_name','product.price', 'inventory.status' )    
+                ->orderBy('id','desc')
+                ->get();                    
+                    
                     return datatables()->of($inventoryList)
                     ->editColumn('id', function ($inventoryList) {
                         return $inventoryList->id;
-                    })    
+                    })
+                    
+                    ->addColumn('customer_name', function ($inventoryList) {
+                        return $inventoryList->customer->first_name . ' '. $inventoryList->customer->last_name;
+                    })
                     
                     ->addColumn('product_name', function ($inventoryList) {
-                        return $inventoryList->product_name;
-                    })    
+                        return $inventoryList->product->product_name;
+                    })
                     
-                     ->addColumn('price', function ($inventoryList) {
+                    ->addColumn('qty', function ($inventoryList) {
+                        return $inventoryList->qty;
+                    })
+                    
+                    ->addColumn('price', function ($inventoryList) {
                         return $inventoryList->price;
-                   })
+                    })
                    
                 
-                    ->editColumn('status', function ($inventoryList) {
-                        if($inventoryList->status=='approve'){
-                            $status = 'Approved';
-                        } else if($inventoryList->status=='pending'){
-                            $status = 'Pending';
-                        } else if($inventoryList->status=='decline'){
-                            $status = 'Denied';
-                        } 
-                        return $status;
+                    ->editColumn('payment_mode', function ($inventoryList) {                       
+                        return $inventoryList->payment_mode;
+                    })
+                    ->editColumn('total', function ($inventoryList) {                       
+                        return $inventoryList->total;
+                    })
+
+                    ->editColumn('balance', function ($inventoryList) {                       
+                        return $inventoryList->balance;
                     })
                     ->addColumn('action', function ($inventoryList) {                       
-                            $status = '<a href="javascript:void(0)" data-toggle="modal" class="btn button-default-custom btn-approve-custom" data-target="#addproduct" onclick ="editProduct('.$inventoryList->id.')" >Edit</a>';
-                            return $status .= '&nbsp;&nbsp;<a href="javascript:void(0)" data-toggle="modal" class="btn button-default-custom btn-deny-custom" data-target="#delete" onclick = "deleteProduct('.$inventoryList->id.')">Delete</a>';                        
+                            $action = '<a href="javascript:void(0)" data-toggle="modal" class="btn button-default-custom btn-approve-custom" data-target="#addinventory" onclick ="editInventory('.$inventoryList->id.')" >Edit</a>';
+                            return $action .= '&nbsp;&nbsp;<a href="javascript:void(0)" data-toggle="modal" class="btn button-default-custom btn-deny-custom" data-target="#delete" onclick = "deleteInventory('.$inventoryList->id.')">Delete</a>';                        
                     })
-                    ->rawColumns(['id','product_name', 'price','status','action'])
+                    ->rawColumns(['id', 'customer_name', 'product_name', 'qty', 'total', 'balance', 'price','payment_mode','action'])
                     ->make(true);
                             } catch (\Throwable $th) {
                                 return response()->json(['success'=>false,'error'=>$th->getMessage()]);
@@ -68,7 +81,7 @@ class InventoryController extends Controller
                         
                         
         }
-        return view('inventoryList');    
+        return view('inventorylist');    
     }
 
     public function saveProduct(Request $request) {
