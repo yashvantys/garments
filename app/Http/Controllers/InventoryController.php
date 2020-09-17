@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Inventory;
+use App\Customer;
+use App\Product;
 use Illuminate\Support\Facades\Validator;
 use Session;
 use Carbon\Carbon;
@@ -27,6 +29,9 @@ class InventoryController extends Controller
      */
     public function index(Request $request)
     {
+        $customers = Customer::select('id', 'first_name', 'last_name')->where('status', 'approved')->get();
+        $products = Product::select('id', 'product_name')->where('status', 'approve')->get();
+        
         if($request->ajax())
         {             
             try {               
@@ -60,8 +65,7 @@ class InventoryController extends Controller
                     return $inventoryList->balance;
                 })
                 ->addColumn('action', function ($inventoryList) {                       
-                    $action = '<a href="javascript:void(0)" data-toggle="modal" class="btn button-default-custom btn-approve-custom" data-target="#addinventory" onclick ="editInventory('.$inventoryList->id.')" >Edit</a>';
-                    return $action .= '&nbsp;&nbsp;<a href="javascript:void(0)" data-toggle="modal" class="btn button-default-custom btn-deny-custom" data-target="#delete" onclick = "deleteInventory('.$inventoryList->id.')">Delete</a>';                        
+                    return '<a href="javascript:void(0)" data-toggle="modal" class="btn button-default-custom btn-approve-custom" data-target="#addinventory" onclick ="editInventory('.$inventoryList->id.')" >Edit</a>';                    
                 })
                 ->rawColumns(['id', 'customer_name', 'product_name', 'qty', 'total', 'balance', 'price','payment_mode','action'])
                 ->make(true);
@@ -69,40 +73,48 @@ class InventoryController extends Controller
                 return response()->json(['success'=>false,'error'=>$th->getMessage()]);
             }           
         }
-        return view('inventorylist');    
+        return view('inventorylist', compact('customers', 'products'));    
     }
 
     public function saveInventory(Request $request) {
         try {            
             if ($request->id) {
+                $product = Product::select('price')->where('id', $request->product_id)->first();
                 $inventory = [
                     'customer_id' => $request->customer_id,
                     'product_id' => $request->product_id,
-                    'qty' =>$request->qty,                    
-                    'price' => $request->price
+                    'qty' => $request->qty,
+                    'price'=> $product->price,
+                    'total' => ($product->price * $request->qty),                   
+                    'amount_paid' => $request->amount_paid,
+                    'payment_mode' => $request->payment_mode
                 ];              
                 Inventory::where('id',$request->id)->update($inventory);                
             } else {
+                $product = Product::select('price')->where('id', $request->product_id)->first();                
                 $inventory = new Inventory([
                     'customer_id' => $request->customer_id,
                     'product_id' => $request->product_id,
-                    'qty' =>$request->qty,                    
-                    'price' => $request->price
+                    'qty' => $request->qty,
+                    'price'=> $product->price,
+                    'total' => ($product->price * $request->qty),                   
+                    'amount_paid' => $request->amount_paid,
+                    'payment_mode' => $request->payment_mode
                 ]);
                 $inventory->save();
             }           
            
-            return response()->json(['success'=>true,'message'=>'Product saved successfully']);
+            return response()->json(['success'=>true,'message'=>'Inventory saved successfully']);
         } catch (\Throwable $th) {
             return response()->json(['success'=>false,'error'=>$th->getMessage()]);
         } 
     }
 
-    public function getproduct(Request $request) {
+    public function getinventory(Request $request) {
         $id = $request->id;
         try {
             $findInventory = Inventory::where('id', $id)->first();           
-            return response()->json(['success'=>true,'product'=>$findInventory]);
+            return response()->json(['success'=>true,'inventory'=>$findInventory]);
         } catch (\Throwable $th) {
             return response()->json(['success'=>false,'error'=>$th->getMessage()]);
         }

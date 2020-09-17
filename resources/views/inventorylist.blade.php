@@ -40,52 +40,62 @@
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Add Inventory</h5>
+                    <h5 class="modal-title" id="exampleModalLabel">Add/Edit Inventory</h5>
                     <button class="close" type="button" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">×</span>
                     </button>
                 </div>
                 <div class="alert alert-success" id="showmsg" style="display:none"></div>
-                <div class="alert alert-danger" id="showerrormsg" style="display:none"></div>
+                <div class="alert alert-danger" id="showerror" style="display:none"></div>
                 <form class="user">
                 @csrf
-                <input type="hidden" id="id" name="id">
+                <input type="hidden" id="inventory_id" name="inventory_id">
                 <div class="modal-body">
                     <label class="radio">Customer Name:</label>                    
                     <div class="input-group position-relative dollar-control">                    
-                        
+                        <select name="customer_id" id="customer_id" class="form-control" style="width:350px">
+                        <option value="">--- Select Customer ---</option>
+                        @foreach ($customers as $key => $customer)
+                            <option value="{{ $customer->id }}">{{ $customer->first_name .' ' .$customer->last_name }}</option>
+                        @endforeach
+                        </select>
                     </div>                
                 </div>
                 <div class="modal-body">
                     <label class="radio">Product Name:</label>                    
                     <div class="input-group position-relative dollar-control">                    
-                        
+                        <select name="product_id" id="product_id" class="form-control" style="width:350px">
+                        <option value="">--- Select Product ---</option>
+                        @foreach ($products as $key => $product)
+                            <option value="{{ $product->id }}">{{ $product->product_name }}</option>
+                        @endforeach
+                        </select>
                     </div>                
                 </div>
                 <div class="modal-body">
                     <label class="radio">Quantity:</label>                    
                     <div class="input-group position-relative dollar-control">                    
-                    <input type="text" class="form-control form-control-dollar" id="price" name="price" aria-describedby="dollar" placeholder="Quantity"> 
+                    <input type="text" class="form-control form-control-dollar" id="qty" name="qty" aria-describedby="dollar" placeholder="Quantity"> 
                     </div>                
                 </div>                              
                 <div class="modal-body">
                     <label class="radio">Payment Mode:</label>                    
                     <div class="input-group position-relative dollar-control">                    
-                        <select name="status" id="status" class="form-control form-control-dollar">
-                            <option value="approve">Approved</option>
-                            <option value="pending">Pending</option>
+                        <select name="payment_mode" id="payment_mode" class="form-control form-control-dollar">
+                            <option value="cash">Cash</option>
+                            <option value="credit">Credit</option>
                         </select>
                     </div>                
                 </div>
                 <div class="modal-body">
                     <label class="radio">Payment:</label>                    
                     <div class="input-group position-relative dollar-control">                    
-                        <input type="text" class="form-control form-control-dollar" id="price" name="price" aria-describedby="dollar" placeholder="Price">
+                        <input type="text" class="form-control form-control-dollar" id="payment" name="payment" aria-describedby="dollar" placeholder="Payment">
                     </div>                
                 </div>  
                 <div class="modal-footer">
                     <button class="btn button-default-custom btn-deny-custom" type="button" data-dismiss="modal">Cancel</button>
-                    <a class="btn button-default-custom btn-approve-custom" data-target="#propertyapprove" data-toggle="modal" onclick = "saveproduct(this)">Save</a>
+                    <a class="btn button-default-custom btn-approve-custom" data-target="#propertyapprove" data-toggle="modal" onclick = "saveInventory(this)">Save</a>
                 </div>
                 </form>
             </div>
@@ -112,7 +122,7 @@
 </div>
 <script>
     function editInventory(id) {        
-        $('#id').val(id);
+        $('#inventory_id').val(id);
        // save customer
        $.ajax({
                 type: "POST",
@@ -127,9 +137,12 @@
                 success: function(data) {
                 if(data.success = 'true')
                 {   
-                    $('#product_name').val(data.product.product_name);
-                    $('#price').val(data.product.price);                   
-                    $('[name=status]').val( data.product.status );                  
+                    $('#product_id').val(data.inventory.product_id);
+                    $('#qty').val(data.inventory.qty);
+                    $('#customer_id').val(data.inventory.customer_id);
+                    $('#payment').val(data.inventory.amount_paid);
+                    $('#payment_mode').val(data.inventory.payment_mode);                   
+                                 
                 }            
                 },
                 error: function(xhr, status, error) {
@@ -168,17 +181,21 @@
     function deleteInventory(id) {
         $('#product_id').val(id);               
     }
-    function saveinventory(obj) {
-        var product_name = $("#product_name").val();
-        var price = $("#price").val();
-        var status = $("#status").val();
-        var id = $("#id").val(); 
-        if (product_name == '') {
-            $( '#showerrormsg' ).text( 'Please enter product name' ).show();
-        } else if(price == '') {
-            $( '#showerrormsg' ).text( 'Please enter price' ).show();              
+    function saveInventory(obj) {
+        var customer_id = $("#customer_id").val();
+        var product_id = $("#product_id").val();
+        var qty = $("#qty").val();
+        var payment = $("#payment").val();
+        var payment_mode = $("#payment_mode").val();
+        var id = $("#inventory_id").val(); 
+        if (customer_id == '') {
+            $( '#showerror' ).text( 'Please select customer' ).show();
+        } else if(product_id == '') {
+            $( '#showerror' ).text( 'Please select product' ).show();
+        } else if(qty == '') {
+            $( '#showerror' ).text( 'Please enter quantity' ).show();              
         } else {
-            $( '#showerrormsg').hide();
+            $( '#showerror').hide();
             $.ajaxSetup({
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -194,17 +211,25 @@
                 "Authorization": "Bearer {{session()->get('token')}}",
                 },
                 data: {               
-                    'product_name' : product_name,
-                    'price': price,                    
-                    'status': status,
+                    'product_id' : product_id,
+                    'customer_id': customer_id,
+                    'qty' : qty,
+                    'payment_mode': payment_mode,
+                    'amount_paid': payment,
                     'id':id                                        
                 },
                 success: function(data) {
                 if(data.success = 'true')
                 {   
-                  $('#showmsg').text( data.message ).show().delay(1000).fadeOut();                  
-                  $("#addproduct").modal("hide");
-                  $("#inventorylist").DataTable().ajax.reload(null, false );
+                    $('#showmsg').text( data.message ).show().delay(1000).fadeOut();
+                    $("#customer_id").val('');
+                    $("#product_id").val('');
+                    $("#qty").val('');
+                    $("#payment").val('');
+                    $("#payment_mode").val('');
+                    $("#inventory_id").val('');                  
+                    $("#addinventory").modal("hide");
+                    $("#inventorylist").DataTable().ajax.reload(null, false );
                 }            
                 },
                 error: function(xhr, status, error) {
