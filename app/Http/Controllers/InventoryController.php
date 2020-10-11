@@ -30,7 +30,7 @@ class InventoryController extends Controller
     public function index(Request $request)
     {
         $customers = Customer::select('id', 'first_name', 'last_name')->where('status', 'approved')->get();
-        $products = Product::select('id', 'product_name')->where('status', 'approve')->get();
+        $products = Product::select('id', 'product_name','price')->where('status', 'approve')->get();
         
         if($request->ajax())
         {             
@@ -62,10 +62,10 @@ class InventoryController extends Controller
                 })
 
                 ->editColumn('balance', function ($inventoryList) {                       
-                    return $inventoryList->balance;
+                    return ($inventoryList->total - $inventoryList->balance);
                 })
                 ->addColumn('action', function ($inventoryList) {                       
-                    return '<a href="javascript:void(0)" data-toggle="modal" class="btn button-default-custom btn-approve-custom" data-target="#addinventory" onclick ="editInventory('.$inventoryList->id.')" >Edit</a>';                    
+                    return '<a href="javascript:void(0)" data-toggle="modal" class="btn button-default-custom btn-approve-custom" data-target="#addinventory" onclick ="editInventory('.$inventoryList->id.')" >Return</a>';                    
                 })
                 ->rawColumns(['id', 'customer_name', 'product_name', 'qty', 'total', 'balance', 'price','payment_mode','action'])
                 ->make(true);
@@ -76,31 +76,37 @@ class InventoryController extends Controller
         return view('inventorylist', compact('customers', 'products'));    
     }
 
-    public function saveInventory(Request $request) {
+    public function saveInventory(Request $request) {        
         try {            
             if ($request->id) {
                 $product = Product::select('price')->where('id', $request->product_id)->first();
+                $productId = explode(',', $request->product_id);
                 $inventory = [
                     'customer_id' => $request->customer_id,
-                    'product_id' => $request->product_id,
+                    'product_id' => $productId[0],
                     'qty' => $request->qty,
                     'price'=> $product->price,
-                    'total' => ($product->price * $request->qty),                   
+                    'balance' => ($product->price * $request->qty),                   
                     'amount_paid' => $request->amount_paid,
-                    'payment_mode' => $request->payment_mode
-                ];              
+                    'payment_mode' => $request->payment_mode,
+                    'transaction_date'=>Carbon::parse($request->transactiondate)->format('Y-m-d')
+                ];
+                //dd($request);              
                 Inventory::where('id',$request->id)->update($inventory);                
             } else {
-                $product = Product::select('price')->where('id', $request->product_id)->first();                
+                $product = Product::select('price')->where('id', $request->product_id)->first();
+                $productId = explode(',', $request->product_id);                
                 $inventory = new Inventory([
                     'customer_id' => $request->customer_id,
-                    'product_id' => $request->product_id,
+                    'product_id' => $productId[0],
                     'qty' => $request->qty,
                     'price'=> $product->price,
                     'total' => ($product->price * $request->qty),                   
                     'amount_paid' => $request->amount_paid,
-                    'payment_mode' => $request->payment_mode
-                ]);
+                    'payment_mode' => $request->payment_mode,
+                    'transaction_date'=> Carbon::parse($request->transactiondate)->format('Y-m-d'),
+                    'rate'=>$request->rate
+                ]);               
                 $inventory->save();
             }           
            

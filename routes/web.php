@@ -45,4 +45,10 @@ Route::get('/inventory', [
 Route::post('/inventorysave', [App\Http\Controllers\InventoryController::class, 'saveInventory'])->name('inventorysave');
 Route::post('/getinventory', [App\Http\Controllers\InventoryController::class, 'getinventory'])->name('getinventory');
 Route::post('/inventorydelete', [App\Http\Controllers\InventoryController::class, 'deleteInventory'])->name('inventorydelete');
+
+Route::post('/report', [App\Http\Controllers\ReportController::class, 'index'])->name('list');
+Route::get('/report', [
+      'uses' => 'App\Http\Controllers\ReportController@index',
+      'as' => 'report-listing'
+    ]);
   

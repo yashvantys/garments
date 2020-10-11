@@ -18,7 +18,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <!-- Bootstrap core JavaScript-->
-    <script src="{{URL::asset('css/jquery/jquery.min.js')}}"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.js"></script> 
+    <!-- <script src="{{URL::asset('css/jquery/jquery.min.js')}}"></script> -->
     <script src="{{URL::asset('css/bootstrap/js/bootstrap.bundle.min.js')}}"></script>
     <!-- Core plugin JavaScript-->
     <script src="{{URL::asset('css/jquery-easing/jquery.easing.min.js')}}"></script>
@@ -28,7 +29,10 @@
     <script src="{{URL::asset('css/datatables/jquery.dataTables.min.js')}}"></script>
     <script src="{{URL::asset('css/datatables/dataTables.bootstrap4.min.js')}}"></script>
     <!-- Page level custom scripts -->
-    <script src="{{URL::asset('js/datatables-demo.js')}}"></script>
+    <script src="{{URL::asset('js/datatables-demo.js')}}"></script>    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.5.0/css/bootstrap-datepicker.css" rel="stylesheet">     
+     
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.5.0/js/bootstrap-datepicker.js"></script> </head>
 
 </head>
 <body id="page-top">
@@ -91,6 +95,11 @@
             <li class="nav-item {{ (request()->is('inventory')) ? 'active' : '' }}">
                 <a class="nav-link" href="{{ url('inventory')}}">
                     <span class="fas fa-fw fa-tachometer-alt"></span>Inventory
+                </a>
+            </li>
+            <li class="nav-item {{ (request()->is('report')) ? 'active' : '' }}">
+                <a class="nav-link" href="{{ url('report')}}">
+                    <span class="fas fa-fw fa-tachometer-alt"></span>Report
                 </a>
             </li>
             

@@ -19,7 +19,7 @@ class Inventory extends Authenticatable {
      * @var array
      */
     protected $fillable = [
-        'customer_id','product_id', 'qty','price', 'total', 'payment_mode', 'balance','status', '# id, customer_id, product_id, qty, price, total, payment_mode, balance, status, created_at, updated_at'
+        'customer_id','product_id', 'qty','price', 'total', 'payment_mode', 'balance', 'transaction_date', 'rate','status', '# id, customer_id, product_id, qty, price, total, payment_mode, balance, transaction_date, rate, status, created_at, updated_at'
     ];
 
     // Rest omitted for brevity

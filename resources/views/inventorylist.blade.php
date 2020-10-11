@@ -64,20 +64,44 @@
                 <div class="modal-body">
                     <label class="radio">Product Name:</label>                    
                     <div class="input-group position-relative dollar-control">                    
-                        <select name="product_id" id="product_id" class="form-control" style="width:350px">
+                        <select name="product_id" id="product_id" onchange="getprice()" class="form-control" style="width:350px">
                         <option value="">--- Select Product ---</option>
                         @foreach ($products as $key => $product)
-                            <option value="{{ $product->id }}">{{ $product->product_name }}</option>
+                            <option value="{!! $product->id.','.$product->price!!}">{{ $product->product_name }}</option>
+                           
                         @endforeach
                         </select>
                     </div>                
                 </div>
                 <div class="modal-body">
+                    <label class="radio">Date:</label>                    
+                    <div class="input-group position-relative dollar-control">                    
+                    <input type="text" class="form-control" name="transactiondate" id="transactiondate">                    
+                    </div>                
+                </div> 
+                <div class="modal-body">
                     <label class="radio">Quantity:</label>                    
                     <div class="input-group position-relative dollar-control">                    
-                    <input type="text" class="form-control form-control-dollar" id="qty" name="qty" aria-describedby="dollar" placeholder="Quantity"> 
+                    <select id="qty" name="qty" onchange="getQty()" class="form-control "> 
+                        @for ($i = 0; $i <= 500; $i++)
+                            <option value="{{ $i }}">{{ $i }}</option>
+                        @endfor
+                    </select>
+                    
                     </div>                
-                </div>                              
+                </div>
+                <div class="modal-body">
+                    <label class="radio">Rate:</label>                    
+                    <div class="input-group position-relative dollar-control">                    
+                    <input type="text" readonly class="form-control form-control-dollar" id="rate" name="rate" aria-describedby="dollar" placeholder="Rate"> 
+                    </div>                
+                </div>
+                <div class="modal-body">
+                    <label class="radio">Total Amount:</label>                    
+                    <div class="input-group position-relative dollar-control">                    
+                    <input type="text" readonly class="form-control form-control-dollar" id="totalAmount" name="totalAmount" aria-describedby="dollar" placeholder="Total Amount"> 
+                    </div>                
+                </div>                               
                 <div class="modal-body">
                     <label class="radio">Payment Mode:</label>                    
                     <div class="input-group position-relative dollar-control">                    
@@ -120,7 +144,31 @@
             </div>
         </div>
 </div>
+
 <script>
+$(document).ready(function () {
+    var date = new Date();
+        var today = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+            $('#transactiondate').datepicker({
+                format: "dd/mm/yyyy",
+                autoclose: true,
+                orientation: 'bottom'  
+            });
+            $('#transactiondate').datepicker('setDate', today);
+        }); 
+    function getprice() {
+        var productval = $('#product_id').val();
+        var productPrice = productval.split(",");
+        //alert('value' + productPrice[1]);
+        $('#rate').val(productPrice[1]);
+    }
+
+    function getQty(){
+        var qty = $('#qty').val();  
+        var rate = $('#rate').val();
+        var total = qty * rate;
+        $('#totalAmount').val(total);
+    }
     function editInventory(id) {        
         $('#inventory_id').val(id);
        // save customer
@@ -137,11 +185,14 @@
                 success: function(data) {
                 if(data.success = 'true')
                 {   
-                    $('#product_id').val(data.inventory.product_id);
+                    alert(data.inventory.product_id+","+data.inventory.rate);
+                    $('#product_id').val(data.inventory.product_id+","+data.inventory.rate);
                     $('#qty').val(data.inventory.qty);
                     $('#customer_id').val(data.inventory.customer_id);
                     $('#payment').val(data.inventory.amount_paid);
-                    $('#payment_mode').val(data.inventory.payment_mode);                   
+                    $('#payment_mode').val(data.inventory.payment_mode);
+                    $('#rate').val(data.inventory.rate);
+                    $('#totalAmount').val(data.inventory.total);                   
                                  
                 }            
                 },
@@ -187,6 +238,8 @@
         var qty = $("#qty").val();
         var payment = $("#payment").val();
         var payment_mode = $("#payment_mode").val();
+        var transactionDate = $('#transactiondate').val();
+        var rate = $('#rate').val();
         var id = $("#inventory_id").val(); 
         if (customer_id == '') {
             $( '#showerror' ).text( 'Please select customer' ).show();
@@ -216,7 +269,9 @@
                     'qty' : qty,
                     'payment_mode': payment_mode,
                     'amount_paid': payment,
-                    'id':id                                        
+                    'id':id,
+                    'transactiondate':transactionDate,
+                    'rate':rate                                        
                 },
                 success: function(data) {
                 if(data.success = 'true')

@@ -46,6 +46,18 @@ a {
     color: rgba(0, 0, 0, 0.7);
 }
 
+  .column {
+    float: left;
+  }
+  
+  .left, .right {
+    width: 25%;
+  }
+  
+  .middle {
+    width: 50%;
+  }
+
 button {
     border: 0px !important;
     background-color: transparent;
