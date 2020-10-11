@@ -185,7 +185,6 @@ $(document).ready(function () {
                 success: function(data) {
                 if(data.success = 'true')
                 {   
-                    alert(data.inventory.product_id+","+data.inventory.rate);
                     $('#product_id').val(data.inventory.product_id+","+data.inventory.rate);
                     $('#qty').val(data.inventory.qty);
                     $('#customer_id').val(data.inventory.customer_id);
