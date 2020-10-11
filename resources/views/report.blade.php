@@ -123,6 +123,9 @@ $(document).ready(function () {
                 iDisplayLength: 10,
                 "bLengthChange": false,
                 "bFilter": false,
+                "language": {                
+                    "info": "Showing page _PAGE_ of _PAGES_",
+                },
                 ajax: {
                     url: '{{route('report-listing')}}',
                     method: 'POST',
