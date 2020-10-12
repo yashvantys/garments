@@ -9,6 +9,7 @@ use App\Product;
 use Illuminate\Support\Facades\Validator;
 use Session;
 use Carbon\Carbon;
+use DB;
 
 class ReportController extends Controller
 {
@@ -40,10 +41,10 @@ class ReportController extends Controller
                 $inventoryList = Inventory::with(['customer','product'])
                 ->when($customerId, function($collection) use ($customerId){
                     return $collection->where('customer_id', $customerId);
-                })
-                ->whereBetween('transaction_date', [$fromDate, $toDate])
+                })               
+                ->whereBetween('transaction_date', [$fromDate, $toDate])                
                 ->orderBy('id','desc')
-                ->get();
+                ->get();                
                 return datatables()->of($inventoryList)
                 ->editColumn('id', function ($inventoryList) {
                     return $inventoryList->id;

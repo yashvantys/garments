@@ -56,6 +56,13 @@
                         <th scope="col"> Payment Mode</th>                                             
                     </tr>
                     </thead>
+                    <tfoot>
+                    <tr>
+                        <th scope="col" colspan="4" style="text-align:right">Total:</th>
+                        <th scope="col"></th>
+                        <th scope="col"></th>
+                    </tr>
+                </tfoot>
                 </table>
                 </div>
             </div>
@@ -71,13 +78,13 @@ $(document).ready(function () {
         var today = new Date(date.getFullYear(), date.getMonth(), date.getDate());
         var pastMonth = new Date(date.getFullYear(), date.getMonth() -1, date.getDate());
             $('#fromDate').datepicker({
-                format: "dd/mm/yyyy",
+                format: "yyyy/mm/dd",
                 autoclose: true,
                 orientation: 'bottom'  
             });
             $('#fromDate').datepicker('setDate', pastMonth);
             $('#toDate').datepicker({
-                format: "dd/mm/yyyy",
+                format: "yyyy/mm/dd",
                 autoclose: true,
                 orientation: 'bottom'  
             });
@@ -132,6 +139,37 @@ $(document).ready(function () {
                     data: {
                         data:  JSON.stringify($('#report-search-form').serializeObject())
                     },                        
+                },
+                "footerCallback": function ( row, data, start, end, display ) {
+                    var api = this.api(), data;
+        
+                    // Remove the formatting to get integer data for summation
+                    var intVal = function ( i ) {
+                        return typeof i === 'string' ?
+                            i.replace(/[\$,]/g, '')*1 :
+                            typeof i === 'number' ?
+                                i : 0;
+                    }; 
+                    // Total over all pages
+                    total = api
+                        .column( 4 )
+                        .data()
+                        .reduce( function (a, b) {
+                            return intVal(a) + intVal(b);
+                        }, 0 );
+        
+                    // Total over this page
+                    pageTotal = api
+                        .column( 4, { page: 'current'} )
+                        .data()
+                        .reduce( function (a, b) {
+                            return intVal(a) + intVal(b);
+                        }, 0 );
+        
+                    // Update footer
+                    $( api.column( 4 ).footer() ).html(
+                        'Rs:'+pageTotal 
+                    );
                 },                   
                 columns: [
                     { "data": "customer_name", "name": "Customer Name"},                        
@@ -143,6 +181,7 @@ $(document).ready(function () {
                     { "data": "payment_mode",  "name": "Payment Mode"}                                          
                 ],
                 pageLength: 10,
+                
             });
         }
         $("#searchbox").keyup(function() {
