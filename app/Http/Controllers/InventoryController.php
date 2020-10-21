@@ -34,19 +34,25 @@ class InventoryController extends Controller
         
         if($request->ajax())
         {             
-            try {               
-                $inventoryList = Inventory::with(['customer','product'])                
-                ->orderBy('id','desc')
-                ->get();
+            try {
+                $inventoryList = Inventory::join('tbl_customer as customer', 'customer.id', '=', 'tbl_inventory.customer_id')          
+                    ->join('tbl_product as product','product.id', '=', 'tbl_inventory.product_id')
+                    ->select(                
+                        'tbl_inventory.*',
+                        'customer.first_name',
+                        'customer.last_name',
+                        'product.product_name'                                                                       
+                    )                               
+                ->get(); 
                 return datatables()->of($inventoryList)
                 ->editColumn('id', function ($inventoryList) {
                     return $inventoryList->id;
                 })                
                 ->addColumn('customer_name', function ($inventoryList) {
-                    return $inventoryList->customer->first_name . ' '. $inventoryList->customer->last_name;
+                    return $inventoryList->first_name . ' '. $inventoryList->last_name;
                 })                
                 ->addColumn('product_name', function ($inventoryList) {
-                    return $inventoryList->product->product_name;
+                    return $inventoryList->product_name;
                 })                
                 ->addColumn('qty', function ($inventoryList) {
                     return $inventoryList->qty;

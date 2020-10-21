@@ -64,7 +64,7 @@
                 <div class="modal-body">
                     <label class="radio">Product Name:</label>                    
                     <div class="input-group position-relative dollar-control">                    
-                        <select name="product_id" id="product_id" onchange="getprice()" class="form-control" style="width:350px">
+                        <select name="productId" id="productId" onchange="getprice()" class="form-control" style="width:350px">
                         <option value="">--- Select Product ---</option>
                         @foreach ($products as $key => $product)
                             <option value="{!! $product->id.','.$product->price!!}">{{ $product->product_name }}</option>
@@ -157,7 +157,7 @@ $(document).ready(function () {
             $('#transactiondate').datepicker('setDate', today);
         }); 
     function getprice() {
-        var productval = $('#product_id').val();
+        var productval = $('#productId').val();
         var productPrice = productval.split(",");
         //alert('value' + productPrice[1]);
         $('#rate').val(productPrice[1]);
@@ -184,8 +184,8 @@ $(document).ready(function () {
                 },
                 success: function(data) {
                 if(data.success = 'true')
-                {   
-                    $('#product_id').val(data.inventory.product_id+","+data.inventory.rate);
+                {                       
+                    $('#productId').val(data.inventory.product_id+","+data.inventory.price);
                     $('#qty').val(data.inventory.qty);
                     $('#customer_id').val(data.inventory.customer_id);
                     $('#payment').val(data.inventory.amount_paid);
@@ -233,7 +233,7 @@ $(document).ready(function () {
     }
     function saveInventory(obj) {
         var customer_id = $("#customer_id").val();
-        var product_id = $("#product_id").val();
+        var product_id = $("#productId").val();
         var qty = $("#qty").val();
         var payment = $("#payment").val();
         var payment_mode = $("#payment_mode").val();
