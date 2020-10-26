@@ -34,26 +34,32 @@ class ReportController extends Controller
         if($request->ajax())
         {  
             try { 
+                $customerId = '';
                 $postDataArray = json_decode($request->data,true);              
                 $fromDate = Carbon::parse($postDataArray['fromDate'])->format('Y-m-d');
                 $toDate = Carbon::parse($postDataArray['toDate'])->format('Y-m-d');               
-                $customerId = $postDataArray['customer_id'];       
-                $inventoryList = Inventory::with(['customer','product'])
-                ->when($customerId, function($collection) use ($customerId){
-                    return $collection->where('customer_id', $customerId);
-                })               
+                $customerId = $postDataArray['customer_id'];
+
+                $inventoryList = DB::table('tbl_inventory')
+                ->join('tbl_customer as customer','customer.id','=','tbl_inventory.customer_id')
+                ->join('tbl_product as product','product.id', '=','tbl_inventory.product_id')        
+                ->select('tbl_inventory.*','customer.first_name','customer.last_name','product.product_name')                
+                ->when (!empty($customerId) , function ($query) use($customerId){
+                    return $query->where('tbl_inventory.customer_id',$customerId);
+                    })                            
                 ->whereBetween('transaction_date', [$fromDate, $toDate])                
                 ->orderBy('id','desc')
-                ->get();                
+                ->get();
+                
                 return datatables()->of($inventoryList)
                 ->editColumn('id', function ($inventoryList) {
                     return $inventoryList->id;
                 })                
                 ->addColumn('customer_name', function ($inventoryList) {
-                    return $inventoryList->customer->first_name . ' '. $inventoryList->customer->last_name;
+                    return $inventoryList->first_name . ' '. $inventoryList->last_name;
                 })                
                 ->addColumn('product_name', function ($inventoryList) {
-                    return $inventoryList->product->product_name;
+                    return $inventoryList->product_name;
                 })                
                 ->addColumn('qty', function ($inventoryList) {
                     return $inventoryList->qty;

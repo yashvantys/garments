@@ -9,6 +9,7 @@ use App\Product;
 use Illuminate\Support\Facades\Validator;
 use Session;
 use Carbon\Carbon;
+use DB;
 
 class InventoryController extends Controller
 {
@@ -35,15 +36,13 @@ class InventoryController extends Controller
         if($request->ajax())
         {             
             try {
-                $inventoryList = Inventory::join('tbl_customer as customer', 'customer.id', '=', 'tbl_inventory.customer_id')          
-                    ->join('tbl_product as product','product.id', '=', 'tbl_inventory.product_id')
-                    ->select(                
-                        'tbl_inventory.*',
-                        'customer.first_name',
-                        'customer.last_name',
-                        'product.product_name'                                                                       
-                    )                               
-                ->get(); 
+                
+                $inventoryList = DB::table('tbl_inventory')
+                ->join('tbl_customer as customer','customer.id','=','tbl_inventory.customer_id')
+                ->join('tbl_product as product','product.id', '=','tbl_inventory.product_id')        
+                ->select('tbl_inventory.*','customer.first_name','customer.last_name','product.product_name')                
+                ->get();                
+                
                 return datatables()->of($inventoryList)
                 ->editColumn('id', function ($inventoryList) {
                     return $inventoryList->id;
@@ -95,7 +94,8 @@ class InventoryController extends Controller
                     'balance' => ($product->price * $request->qty),                   
                     'amount_paid' => $request->amount_paid,
                     'payment_mode' => $request->payment_mode,
-                    'transaction_date'=>Carbon::parse($request->transactiondate)->format('Y-m-d')
+                    'transaction_date'=>Carbon::createFromFormat('m/d/Y', $request->transactiondate)->format('Y-m-d')
+                    
                 ];
                 //dd($request);              
                 Inventory::where('id',$request->id)->update($inventory);                
@@ -110,7 +110,7 @@ class InventoryController extends Controller
                     'total' => ($product->price * $request->qty),                   
                     'amount_paid' => $request->amount_paid,
                     'payment_mode' => $request->payment_mode,
-                    'transaction_date'=> Carbon::parse($request->transactiondate)->format('Y-m-d'),
+                    'transaction_date'=> Carbon::createFromFormat('m/d/Y', $request->transactiondate)->format('Y-m-d'),
                     'rate'=>$request->rate
                 ]);               
                 $inventory->save();
