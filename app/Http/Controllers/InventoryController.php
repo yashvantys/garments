@@ -39,10 +39,10 @@ class InventoryController extends Controller
             try {
 
                 $inventoryList = DB::table('tbl_inventory')
-                ->leftJoin('tbl_transaction', 'tbl_transaction.inventory_id', '=', 'tbl_inventory.id')
+                ->leftJoin('tbl_transaction', 'tbl_transaction.inventory_id', '=', 'tbl_inventory.id','right outer')
                 ->join('tbl_customer as customer','customer.id','=','tbl_inventory.customer_id')
                 ->join('tbl_product as product','product.id', '=','tbl_inventory.product_id')
-                ->select('tbl_transaction.amount','tbl_inventory.*','customer.first_name','customer.last_name','product.product_name')
+                ->select('tbl_transaction.amount as amount','tbl_inventory.*','customer.first_name','customer.last_name','product.product_name')
                 ->orderBy('id','desc')
                 ->get();
 

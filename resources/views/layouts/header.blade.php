@@ -102,6 +102,11 @@
                     <span class="fas fa-fw fa-tachometer-alt"></span>Report
                 </a>
             </li>
+            <li class="nav-item {{ (request()->is('history')) ? 'active' : '' }}">
+                <a class="nav-link" href="{{ url('history')}}">
+                    <span class="fas fa-fw fa-tachometer-alt"></span>Transaction History
+                </a>
+            </li>
             
         </ul>
         <!-- End of Sidebar -->

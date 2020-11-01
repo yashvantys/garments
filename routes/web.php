@@ -51,4 +51,12 @@ Route::get('/report', [
       'uses' => 'App\Http\Controllers\ReportController@index',
       'as' => 'report-listing'
     ]);
+
+Route::post('/history', [App\Http\Controllers\ReportController::class, 'history'])->name('history');
+Route::get('/history', [
+      'uses' => 'App\Http\Controllers\ReportController@history',
+      'as' => 'history-listing'
+    ]);
+
+    
   
