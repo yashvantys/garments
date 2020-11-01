@@ -17,6 +17,7 @@
                 <caption></caption>                
                 <thead>
                     <tr>                 
+                        <th scope="col"> CID</th>
                         <th scope="col"> First Name</th>                        
                         <th scope="col"> Last Name </th>                        
                         <th scope="col"> Email ID</th>                        
@@ -43,7 +44,7 @@
                     </button>
                 </div>
                 <div class="alert alert-success" id="showmsg" style="display:none"></div>
-                <div class="alert alert-danger" id="showerrormsg" style="display:none"></div>
+                <div class="alert alert-danger" id="showerrormsgform" style="display:none"></div>
                 <form class="user">
                 @csrf
                 <input type="hidden" id="id" name="id">
@@ -68,7 +69,7 @@
                 <div class="modal-body">
                     <label class="radio">Phone:</label>                    
                     <div class="input-group position-relative dollar-control">                    
-                        <input type="email" class="form-control form-control-dollar" id="phone" name="phone" aria-describedby="dollar" placeholder="Phone">
+                        <input type="phone" maxlength="10" class="form-control form-control-dollar phone" id="phone" name="phone" aria-describedby="dollar" placeholder="Phone">
                     </div>                
                 </div>
                 <div class="modal-body">
@@ -168,6 +169,7 @@
         $('#customer_id').val(id);               
     }
     function savecustomer(obj) {
+        var mailformat = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
         var first_name = $("#first_name").val();
         var last_name = $("#last_name").val();      
         var email = $("#email").val();      
@@ -175,13 +177,15 @@
         var status = $("#status").val();
         var id = $("#id").val(); 
         if (first_name == '') {
-            $( '#showerrormsg' ).text( 'Please enter first name' ).show();
+            $( '#showerrormsgform' ).text( 'Please enter first name' ).show();
         } else if(last_name == '') {
-            $( '#showerrormsg' ).text( 'Please enter last name' ).show();
+            $( '#showerrormsgform' ).text( 'Please enter last name' ).show();
         } else if(email == '') {
-            $( '#showerrormsg' ).text( 'Please enter email' ).show();        
+            $( '#showerrormsgform' ).text( 'Please enter email' ).show();
+        } else if(email != '' && !email.match(mailformat)) {
+            $( '#showerrormsgform' ).text( 'Please enter valid email address' ).show();        
         } else {
-            $( '#showerrormsg').hide();
+            $( '#showerrormsgform').hide();
             $.ajaxSetup({
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -213,7 +217,7 @@
                 }            
                 },
                 error: function(xhr, status, error) {
-                  $( '#showerrormsg' ).text( data.message );
+                  $( '#showerrormsgform' ).text( data.message );
                 }
             });
         }           
@@ -231,7 +235,7 @@
                         });
                 dataTable = $('#customerlist').DataTable({
                     processing: true,
-                    serverSide: true,
+                    serverSide: false,
                     order: [],
                     aLengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
                     iDisplayLength: 10,
@@ -240,6 +244,7 @@
                         method: 'POST'                        
                     },                   
                     columns: [                        
+                        { "data": "id", "name": "CID"},
                         { "data": "first_name", "name": "First Name"},
                         { "data": "last_name", "name": "Last name"}, 
                         { "data": "email", "name": "Email"},                                            
@@ -251,6 +256,13 @@
             }
             $("#searchbox").keyup(function() {
                 $('#customerlist').dataTable().fnFilter(this.value);
+            });
+
+            $(".phone").keypress(function(event){
+                var keycode = event.which;
+                if (!(keycode >= 48 && keycode <= 57)) {
+                    event.preventDefault();
+                }
             });
             
 

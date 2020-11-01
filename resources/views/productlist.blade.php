@@ -17,6 +17,7 @@
                 <caption></caption>                
                 <thead>
                     <tr>                 
+                        <th scope="col"> Product No</th>
                         <th scope="col"> Product Name</th>                        
                         <th scope="col"> Price</th>
                         <th scope="col"> Status</th>
@@ -42,7 +43,7 @@
                     </button>
                 </div>
                 <div class="alert alert-success" id="showmsg" style="display:none"></div>
-                <div class="alert alert-danger" id="showerrormsg" style="display:none"></div>
+                <div class="alert alert-danger" id="showerrormsgform" style="display:none"></div>
                 <form class="user">
                 @csrf
                 <input type="hidden" id="id" name="id">
@@ -55,7 +56,7 @@
                 <div class="modal-body">
                     <label class="radio">Price:</label>                    
                     <div class="input-group position-relative dollar-control">                    
-                        <input type="text" class="form-control form-control-dollar" id="price" name="price" aria-describedby="dollar" placeholder="Price">
+                        <input type="text" class="form-control form-control-dollar price" id="price" name="price" aria-describedby="dollar" placeholder="Price">
                     </div>                
                 </div>                
                 <div class="modal-body">
@@ -95,6 +96,80 @@
         </div>
 </div>
 <script>
+
+//service fee formatting
+const isNumericInput = (event) => {
+    const key = event.keyCode;
+    return ((key >= 48 && key <= 57) || // Allow number line
+        (key >= 96 && key <= 105) || // Allow number pad
+        (key === 110 || key === 190) // Allow dot
+    );
+};
+const isModifierKey = (event) => {
+    const key = event.keyCode;
+    return (event.shiftKey === true || key === 35 || key === 36) || // Allow Shift, Home, End
+        (key === 8 || key === 9 || key === 13 || key === 46) || // Allow Backspace, Tab, Enter, Delete
+        (key > 36 && key < 41) || // Allow left, up, right, down
+        (
+            // Allow Ctrl/Command + A,C,V,X,Z
+            (event.ctrlKey === true || event.metaKey === true) &&
+            (key === 65 || key === 67 || key === 86 || key === 88 || key === 90 || key === 110 || key === 190)
+        )
+};
+const enforceFormat = (event) => {
+    // Input must be of a valid number format or a modifier key, and not longer than ten digits
+    if(!isNumericInput(event) && !isModifierKey(event)){
+        event.preventDefault();
+    }
+};
+const formatToServiceFee = (event) => {
+    if(isModifierKey(event)) {return;}
+    // I am lazy and don't like to type things more than once
+   
+        const target = event.target;
+        const input = event.target.value.replace(/\D/g,'').substring(0,8); // First five digits of input only
+        const zip = input.substring(0,5);
+        const middle = input.substring(5,7);
+        if(input.length > 7 ){
+            target.value = `${zip}.${middle}`;
+        } else if(input.length > 5) {
+            target.value = `${zip}.${middle}`;
+        } else if(input.length > 0) {
+            target.value = `${zip}`;
+        } 
+   
+  
+};
+const inputElement = document.getElementById('price');
+inputElement.addEventListener('keydown',enforceFormat);
+inputElement.addEventListener('keyup',formatToServiceFee);
+function validateFloatKeyPress(el, evt) {
+    var charCode = (evt.which) ? evt.which : event.keyCode;
+    var number = el.value.split('.');
+    if (charCode != 46 && charCode > 31 && (charCode < 48 || charCode > 57)) {
+        return false;
+    }
+    //just one dot (thanks ddlab)
+    if(number.length>1 && charCode == 46){
+         return false;
+    }
+    //get the carat position
+    var caratPos = getSelectionStart(el);
+    var dotPos = el.value.indexOf(".");
+    if( caratPos > dotPos && dotPos>-1 && (number[1].length > 1)){
+        return false;
+    }
+    return true;
+}
+
+function getSelectionStart(o) {
+    if (o.createTextRange) {
+        var r = document.selection.createRange().duplicate()
+        r.moveEnd('character', o.value.length)
+        if (r.text == '') return o.value.length
+        return o.value.lastIndexOf(r.text)
+    } else return o.selectionStart
+}
     function editProduct(id) {        
         $('#id').val(id);
        // save customer
@@ -152,17 +227,19 @@
     function deleteProduct(id) {
         $('#product_id').val(id);               
     }
+
+    
     function saveproduct(obj) {
         var product_name = $("#product_name").val();
         var price = $("#price").val();
         var status = $("#status").val();
         var id = $("#id").val(); 
         if (product_name == '') {
-            $( '#showerrormsg' ).text( 'Please enter product name' ).show();
+            $( '#showerrormsgform' ).text( 'Please enter product name' ).show();
         } else if(price == '') {
-            $( '#showerrormsg' ).text( 'Please enter price' ).show();              
+            $( '#showerrormsgform' ).text( 'Please enter price' ).show();                     
         } else {
-            $( '#showerrormsg').hide();
+            $( '#showerrormsgform').hide();
             $.ajaxSetup({
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -192,11 +269,16 @@
                 }            
                 },
                 error: function(xhr, status, error) {
-                  $( '#showerrormsg' ).text( data.message );
+                  $( '#showerrormsgform' ).text( data.message );
                 }
             });
         }           
     }
+    function numberWithCommas(x) {
+        return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }   
+    
+
     $(document).ready(function() {
         productlist();
         var dataTable;
@@ -208,7 +290,7 @@
             });
             dataTable = $('#productlist').DataTable({
                 processing: true,
-                serverSide: true,
+                serverSide: false,
                 order: [],
                 aLengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
                 iDisplayLength: 10,
@@ -217,6 +299,7 @@
                     method: 'POST'                        
                 },                   
                 columns: [                        
+                    { "data": "id", "name": "Product No"},
                     { "data": "product_name", "name": "Product Name"},
                     { "data": "price", "name": "Price"},                                                                  
                     { "data": "status",  "name": "status"},
@@ -228,6 +311,8 @@
         $("#searchbox").keyup(function() {
             $('#productlist').dataTable().fnFilter(this.value);
         });
+
+        
     });
 </script>
 @endsection

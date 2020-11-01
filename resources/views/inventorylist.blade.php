@@ -17,6 +17,7 @@
                 <caption></caption>                
                 <thead>
                     <tr>
+                        <th scope="col"> SrNo</th>
                         <th scope="col"> Customer Name</th>                 
                         <th scope="col"> Product Name</th>
                         <th scope="col"> Quantity</th>                        
@@ -50,6 +51,7 @@
                 <form class="user">
                 @csrf
                 <input type="hidden" id="inventory_id" name="inventory_id">
+                <input type="hidden" id="status_return" name="status_return">
                 <div class="modal-body">
                     <label class="radio">Customer Name:</label>                    
                     <div class="input-group position-relative dollar-control">                    
@@ -108,6 +110,7 @@
                         <select name="payment_mode" id="payment_mode" class="form-control form-control-dollar">
                             <option value="cash">Cash</option>
                             <option value="credit">Credit</option>
+                            <option value="payment">Payment</option>
                         </select>
                     </div>                
                 </div>
@@ -169,8 +172,9 @@ $(document).ready(function () {
         var total = qty * rate;
         $('#totalAmount').val(total);
     }
-    function editInventory(id) {        
+    function editInventory(id, status) {        
         $('#inventory_id').val(id);
+        $('#status_return').val(status);
        // save customer
        $.ajax({
                 type: "POST",
@@ -181,6 +185,44 @@ $(document).ready(function () {
                 },
                 data: {               
                     'id' : id                                                 
+                },
+                success: function(data) {
+                if(data.success = 'true')
+                {                       
+                    $('#productId').val(data.inventory.product_id+","+data.inventory.price);
+                    $('#qty').val(data.inventory.qty);
+                    $('#customer_id').val(data.inventory.customer_id);
+                    $('#payment').val(data.inventory.amount_paid);
+                    if(status) {
+                        $('#payment_mode').val('payment');
+                    } else {
+                        $('#payment_mode').val(data.inventory.payment_mode);
+                    }                    
+                    $('#rate').val(data.inventory.rate);
+                    $('#totalAmount').val(data.inventory.total);                   
+                                 
+                }            
+                },
+                error: function(xhr, status, error) {
+                  $( '#showerrormsg' ).text( data.message );
+                }
+            });
+    }
+
+    function addInventory(id,status) {        
+        $('#inventory_id').val(id);
+        $('#status_return').val(status);
+       // save customer
+       $.ajax({
+                type: "POST",
+                url: '{{route('getinventory')}}',            
+                dataType: "JSON",
+                headers: {
+                "Authorization": "Bearer {{session()->get('token')}}",
+                },
+                data: {               
+                    'id' : id,
+                    'status':status                                                
                 },
                 success: function(data) {
                 if(data.success = 'true')
@@ -239,13 +281,14 @@ $(document).ready(function () {
         var payment_mode = $("#payment_mode").val();
         var transactionDate = $('#transactiondate').val();
         var rate = $('#rate').val();
-        var id = $("#inventory_id").val(); 
+        var id = $("#inventory_id").val();
+        var status_return = $('#status_return').val(); 
         if (customer_id == '') {
             $( '#showerror' ).text( 'Please select customer' ).show();
         } else if(product_id == '') {
             $( '#showerror' ).text( 'Please select product' ).show();
-        } else if(qty == '') {
-            $( '#showerror' ).text( 'Please enter quantity' ).show();              
+        } else if(qty == 0) {
+            $( '#showerror' ).text( 'Please select quantity' ).show();              
         } else {
             $( '#showerror').hide();
             $.ajaxSetup({
@@ -270,7 +313,8 @@ $(document).ready(function () {
                     'amount_paid': payment,
                     'id':id,
                     'transactiondate':transactionDate,
-                    'rate':rate                                        
+                    'rate':rate,
+                    'status_return':status_return                                        
                 },
                 success: function(data) {
                 if(data.success = 'true')
@@ -303,7 +347,7 @@ $(document).ready(function () {
             });
             dataTable = $('#inventorylist').DataTable({
                 processing: true,
-                serverSide: true,
+                serverSide: false,
                 order: [],
                 aLengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
                 iDisplayLength: 10,
@@ -312,6 +356,7 @@ $(document).ready(function () {
                     method: 'POST'                        
                 },                   
                 columns: [
+                    { "data": "id", "name": "Sr No"},
                     { "data": "customer_name", "name": "Customer Name"},                        
                     { "data": "product_name", "name": "Product Name"},
                     { "data": "qty", "name": "Quantity"}, 
