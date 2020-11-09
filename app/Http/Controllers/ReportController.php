@@ -98,11 +98,11 @@ class ReportController extends Controller
                 $toDate = Carbon::parse($postDataArray['toDate'])->format('Y-m-d');
                 $customerId = $postDataArray['customer_id'];
 
-                $inventoryList = DB::table('tbl_inventory')
-                ->leftJoin('tbl_transaction', 'tbl_transaction.inventory_id', '=', 'tbl_inventory.id','right outer')
+                $inventoryList = DB::table('tbl_transaction')
+                ->leftJoin('tbl_inventory', 'tbl_inventory.id', '=', 'tbl_transaction.inventory_id')
                 ->join('tbl_customer as customer','customer.id','=','tbl_inventory.customer_id')
                 ->join('tbl_product as product','product.id', '=','tbl_inventory.product_id')
-                ->select('tbl_inventory.*','customer.first_name','customer.last_name','product.product_name')
+                ->select('tbl_inventory.*','customer.first_name','customer.last_name','product.product_name','tbl_transaction.status')
                 ->when (!empty($customerId) , function ($query) use($customerId){
                     return $query->where('tbl_inventory.customer_id',$customerId);
                     })
@@ -127,7 +127,7 @@ class ReportController extends Controller
                     return $inventoryList->price;
                 })
                 ->editColumn('payment_mode', function ($inventoryList) {
-                    return $inventoryList->payment_mode;
+                    return $inventoryList->status;
                 })
                 ->editColumn('total', function ($inventoryList) {
                     return $inventoryList->total;

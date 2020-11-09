@@ -178,7 +178,7 @@ $(document).ready(function () {
                     { "data": "price", "name": "Price"},
                     { "data": "total", "name": "Total"},
                     { "data": "balance", "name": "Balance"},                                                                   
-                    { "data": "payment_mode",  "name": "Payment Mode"}                                          
+                    { "data": "status",  "name": "Payment Mode"}                                          
                 ],
                 pageLength: 10,
                 

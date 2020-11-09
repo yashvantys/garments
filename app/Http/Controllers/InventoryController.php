@@ -39,10 +39,10 @@ class InventoryController extends Controller
             try {
 
                 $inventoryList = DB::table('tbl_inventory')
-                ->leftJoin('tbl_transaction', 'tbl_transaction.inventory_id', '=', 'tbl_inventory.id','right outer')
+                ->join('tbl_transaction', 'tbl_transaction.inventory_id', '=', 'tbl_inventory.id')
                 ->join('tbl_customer as customer','customer.id','=','tbl_inventory.customer_id')
                 ->join('tbl_product as product','product.id', '=','tbl_inventory.product_id')
-                ->select('tbl_transaction.amount as amount','tbl_inventory.*','customer.first_name','customer.last_name','product.product_name')
+                ->select('tbl_transaction.amount as paid','tbl_transaction.status as tstatus','tbl_inventory.*','customer.first_name','customer.last_name','product.product_name','customer.id as cid')
                 ->orderBy('id','desc')
                 ->get();
 
@@ -63,21 +63,33 @@ class InventoryController extends Controller
                 ->addColumn('price', function ($inventoryList) {
                     return $inventoryList->price;
                 })
-                ->editColumn('payment_mode', function ($inventoryList) {
-                    return $inventoryList->payment_mode;
+                ->editColumn('payment_mode', function ($inventoryList) {                    
+                    return $inventoryList->tstatus;
                 })
                 ->editColumn('total', function ($inventoryList) {
                     return $inventoryList->total;
                 })
 
                 ->editColumn('balance', function ($inventoryList) {
-                    return ($inventoryList->total - $inventoryList->balance);
+                    if ($inventoryList->tstatus == 'payment') {
+                        $totalAmount = ($inventoryList->total - $inventoryList->paid);
+                    } else {
+                        $totalAmount =  ($inventoryList->total - $inventoryList->balance);
+                    }
+                    return $totalAmount;
                 })
                 ->addColumn('action', function ($inventoryList) {
                     if ($inventoryList->status !='return') {
-                        $status = '<div class="action-tool"><a href="javascript:void(0)" data-toggle="modal" class="btn button-default-custom  btn-deny-custom" data-target="#addinventory" onclick ="editInventory('.$inventoryList->id.')">Return</a>';                  
-                        $status .= '&nbsp;<a id="view_profile" href="javascript:void(0)" data-toggle="modal" class="btn button-default-custom btn-approve-custom" data-target="#addinventory" onclick ="editInventory('.$inventoryList->id.',2)">Add Transaction</a></div>';                   
+                            if ($inventoryList->tstatus != 'payment') {
+                                $status = '<div class="action-tool"><a href="javascript:void(0)" data-toggle="modal" class="btn button-default-custom  btn-deny-custom" data-target="#returninventory" onclick ="editInventory('.$inventoryList->id.')">Return</a>';                  
+                                $status .= '&nbsp;<a id="view_profile" href="javascript:void(0)" data-toggle="modal" data-id="'.$inventoryList->cid.'"  data-name="'.$inventoryList->first_name . ' '. $inventoryList->last_name.'" class="btn button-default-custom btn-approve-custom createinventory" onclick ="CreditInventory('.$inventoryList->id.')">Cash Payment</a></div>';                   
+                            } else {
+                                $status =''; 
+                            }
+                        
                         return $status;  
+                    } else if ($inventoryList->status =='return') {
+                        return 'Returned';
                     }
                 })
                 ->rawColumns(['id', 'customer_name', 'product_name', 'qty', 'total', 'balance', 'price','payment_mode','action'])
@@ -92,30 +104,11 @@ class InventoryController extends Controller
     public function saveInventory(Request $request) {
         try {
             if ($request->id) {
-                $product = Product::select('price')->where('id', $request->product_id)->first();
-                $productId = explode(',', $request->product_id);
-                if($request->status_return && $request->status_return == 2) {
-                    $inventory = [                    
-                        'updated_at'=>Carbon::createFromFormat('d/m/Y', $request->transactiondate)->format('Y-m-d'),
-                        'status' =>'debit'
-                    ];
-                } else {
-                    $inventory = [                    
-                        'updated_at'=>Carbon::createFromFormat('d/m/Y', $request->transactiondate)->format('Y-m-d'),
-                        'status' =>'return'
-                    ];
-                }
-                Inventory::where('id',$request->id)->update($inventory);
-                if (empty($request->status_return)){
-                    $status = 'return';
-                } else {
-                    $status = 'payment';
-                }
                 $transaction = new Transaction([
                     'inventory_id' => $request->id,                    
-                    'amount' => $request->amount_paid,
-                    'status' => $status,
-                    'trasaction_date'=>Carbon::createFromFormat('d/m/Y', $request->transactiondate)->format('Y-m-d')                    
+                    'amount' => $request->amount,                    
+                    'trasaction_date'=>date('Y-m-d'),
+                    'status'=>'payment'                    
                 ]);
                 $transaction->save();
             } else {
@@ -133,6 +126,13 @@ class InventoryController extends Controller
                     'rate'=>$request->rate
                 ]);
                 $inventory->save();
+                $transaction = new Transaction([
+                    'inventory_id' => $inventory->id,                    
+                    'amount' => ($product->price * $request->qty),
+                    'status' => $request->payment_mode,
+                    'trasaction_date'=>Carbon::createFromFormat('d/m/Y', $request->transactiondate)->format('Y-m-d')                    
+                ]);
+                $transaction->save();
             }
 
             return response()->json(['success'=>true,'message'=>'Inventory saved successfully']);
@@ -155,8 +155,18 @@ class InventoryController extends Controller
         $id = $request->id;
         try {
             $inventory = Inventory::find($id);
-            $inventory->delete();
-            return response()->json(['success'=>true]);
+            $inventory->status = 'return';
+            $inventory->balance = $request->totalAmount;            
+            
+            $transaction = new Transaction([
+                'inventory_id' => $request->id,                    
+                'amount' => $request->totalAmount,
+                'status' => 'return',
+                'trasaction_date'=> date('Y-m-d')                    
+            ]);
+            $transaction->save();   
+            $inventory->save();         
+            return response()->json(['success'=>true,'message' =>'Inventory retured successfully']);
         } catch (\Throwable $th) {
             return response()->json(['success'=>false,'error'=>$th->getMessage()]);
         }

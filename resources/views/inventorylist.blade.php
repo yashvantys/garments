@@ -23,7 +23,7 @@
                         <th scope="col"> Quantity</th>                        
                         <th scope="col"> Price</th>
                         <th scope="col"> Total</th>
-                        <th scope="col"> Balance</th>
+                        <th scope="col"> Credit Balance</th>
                         <th scope="col"> Payment Mode</th>
                         <th scope="col"> Action</th>                        
                     </tr>
@@ -107,19 +107,12 @@
                 <div class="modal-body">
                     <label class="radio">Payment Mode:</label>                    
                     <div class="input-group position-relative dollar-control">                    
-                        <select name="payment_mode" id="payment_mode" class="form-control form-control-dollar">
-                            <option value="cash">Cash</option>
+                        <select name="payment_mode" id="payment_mode" class="form-control form-control-dollar">                           
                             <option value="credit">Credit</option>
-                            <option value="payment">Payment</option>
+                            <option value="cash">Cash</option>                          
                         </select>
                     </div>                
-                </div>
-                <div class="modal-body">
-                    <label class="radio">Payment:</label>                    
-                    <div class="input-group position-relative dollar-control">                    
-                        <input type="text" class="form-control form-control-dollar" id="payment" name="payment" aria-describedby="dollar" placeholder="Payment">
-                    </div>                
-                </div>  
+                </div>                
                 <div class="modal-footer">
                     <button class="btn button-default-custom btn-deny-custom" type="button" data-dismiss="modal">Cancel</button>
                     <a class="btn button-default-custom btn-approve-custom" data-target="#propertyapprove" data-toggle="modal" onclick = "saveInventory(this)">Save</a>
@@ -128,22 +121,62 @@
             </div>
         </div>
 </div>
-<div id="delete" class="modal fade" role="dialog">
+<div id="returninventory" class="modal fade" role="dialog">
 <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Delete Product</h5>
+                    <h5 class="modal-title" id="exampleModalLabel">Return Product</h5>
                     <button class="close" type="button" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">×</span>
           </button>
                 </div>
                 <div class="modal-body">
                 <div class="alert alert-danger" id="showerrormsg" style="display:none"></div>    
-                <input type="hidden" id="product_id" name="product_id">Are you sure?</div>
+                <input type="hidden" id="inventory_id" name="inventory_id">Are you sure?
+                <input type="hidden" id="totalAmount" name="totalAmount">
+                </div>
                 <div class="modal-footer">
                     <button class="btn button-default-custom btn-deny-custom" type="button" data-dismiss="modal">No</button>
-                    <a class="btn button-default-custom btn-approve-custom" data-toggle="modal" onclick = "productDelete(this)">Yes</a>
+                    <a class="btn button-default-custom btn-approve-custom" data-toggle="modal" onclick = "inventoryDelete(this)">Yes</a>
                 </div>
+            </div>
+        </div>
+</div>
+
+<!-- Modal -->
+<div id="creditinventory" class="modal fade" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Cash Payment</h5>
+                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="alert alert-success" id="showmsg" style="display:none"></div>
+                <div class="alert alert-danger" id="showerrortxt" style="display:none"></div>
+                <form class="user">
+                @csrf
+                <input type="hidden" id="inventory_id" name="inventory_id">
+                <input type="hidden" id="status_return" name="status_return">               
+                
+                <div class="modal-body">
+                    <label class="radio">CID: <span id="cid"></span></label>                        
+                    <label class="radio"> Customer Name: <span id="name"></span></label>
+                </div>                
+               
+                <div class="modal-body">
+                    <label class="radio">Amount Paid:</label>                    
+                    <div class="input-group position-relative dollar-control">                    
+                    <input type="number" class="form-control form-control-dollar" id="totalAmountpaid" name="totalAmountpaid" aria-describedby="dollar" placeholder="Amount Paid"> 
+                    </div>                
+                </div>                               
+                          
+                <div class="modal-footer">
+                    <button class="btn button-default-custom btn-deny-custom" type="button" data-dismiss="modal">Cancel</button>
+                    <a class="btn button-default-custom btn-approve-custom" onclick = "AddInventoryPayment(this)">Save</a>
+                </div>
+                </form>
             </div>
         </div>
 </div>
@@ -172,6 +205,10 @@ $(document).ready(function () {
         var total = qty * rate;
         $('#totalAmount').val(total);
     }
+
+    function CreditInventory(id) {        
+        $('#inventory_id').val(id);
+    }
     function editInventory(id, status) {        
         $('#inventory_id').val(id);
         $('#status_return').val(status);
@@ -194,7 +231,7 @@ $(document).ready(function () {
                     $('#customer_id').val(data.inventory.customer_id);
                     $('#payment').val(data.inventory.amount_paid);
                     if(status) {
-                        $('#payment_mode').val('payment');
+                        $('#payment_mode').val('debit');
                     } else {
                         $('#payment_mode').val(data.inventory.payment_mode);
                     }                    
@@ -244,7 +281,8 @@ $(document).ready(function () {
     }
 
     function inventoryDelete() {
-        var id = $('#product_id').val();
+        var id = $('#inventory_id').val();
+        var totalAmount = $('#totalAmount').val();
         $.ajax({
             type: "POST",
             url: '{{route('inventorydelete')}}',            
@@ -253,13 +291,14 @@ $(document).ready(function () {
             "Authorization": "Bearer {{session()->get('token')}}",
             },
             data: {               
-                'id' : id
+                'id' : id,
+                'totalAmount':totalAmount
             },
             success: function(data) {
             if(data.success = 'true')
             {
                 $('#showmsg' ).text( data.message ).show().delay(1000).fadeOut();                  
-                $("#delete").modal("hide");
+                $("#returninventory").modal("hide");
                 $("#inventorylist").DataTable().ajax.reload(null, false );
                
             }            
@@ -336,6 +375,49 @@ $(document).ready(function () {
             });
         }           
     }
+    function AddInventoryPayment(obj) {
+       
+        var id = $("#inventory_id").val();
+        var totalAmount = $('#totalAmountpaid').val(); 
+        alert(totalAmount);       
+        if (totalAmount == '') {
+            $( '#showerrortxt' ).text( 'Please enter amount' ).show();                      
+        } else {
+            $( '#showerrortxt').hide();
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+
+            // save customer
+            $.ajax({
+                type: "POST",
+                url: '{{route('inventorysave')}}',            
+                dataType: "JSON",
+                headers: {
+                "Authorization": "Bearer {{session()->get('token')}}",
+                },
+                data: {
+                    'id':id,
+                    'amount':totalAmount                                                          
+                },
+                success: function(data) {
+                if(data.success = 'true')
+                {   
+                    $('#showmsg').text( data.message ).show().delay(1000).fadeOut();                    
+                    $("#totalAmount").val('');
+                    $("#inventory_id").val('');                  
+                    $("#creditinventory").modal("hide");
+                    $("#inventorylist").DataTable().ajax.reload(null, false );
+                }            
+                },
+                error: function(xhr, status, error) {
+                  $( '#showerrormsg' ).text( data.message );
+                }
+            });
+        }           
+    }
     $(document).ready(function() {
         inventorylist();
         var dataTable;
@@ -371,6 +453,15 @@ $(document).ready(function () {
         }
         $("#searchbox").keyup(function() {
             $('#inventorylist').dataTable().fnFilter(this.value);
+        });
+
+        $('#inventorylist').on('click', '.createinventory', function (e) {
+            e.preventDefault();
+            let cid = $(this).data("id");
+            let name = $(this).attr('data-name');       
+            $( '#cid' ).text( cid );
+            $( '#name' ).text( name );
+            $('#creditinventory').modal('show');
         });
     });
 </script>
