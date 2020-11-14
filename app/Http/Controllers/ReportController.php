@@ -43,7 +43,7 @@ class ReportController extends Controller
                 $inventoryList = DB::table('tbl_inventory')
                 ->join('tbl_customer as customer','customer.id','=','tbl_inventory.customer_id')
                 ->join('tbl_product as product','product.id', '=','tbl_inventory.product_id')
-                ->select('tbl_inventory.*','customer.first_name','customer.last_name','product.product_name')
+                ->select('tbl_inventory.*','customer.first_name','customer.last_name','product.product_name','customer.id as custid')
                 ->when (!empty($customerId) , function ($query) use($customerId){
                     return $query->where('tbl_inventory.customer_id',$customerId);
                     })
@@ -77,7 +77,7 @@ class ReportController extends Controller
                 ->editColumn('balance', function ($inventoryList) {
                     return ($inventoryList->total - $inventoryList->balance);
                 })
-                ->rawColumns(['id', 'customer_name', 'product_name', 'qty', 'total', 'balance', 'price','payment_mode'])
+                ->rawColumns(['id','custid', 'customer_name', 'product_name', 'qty', 'total', 'balance', 'price','payment_mode'])
                 ->make(true);
             } catch (\Throwable $th) {
                 return response()->json(['success'=>false,'error'=>$th->getMessage()]);
@@ -102,14 +102,15 @@ class ReportController extends Controller
                 ->leftJoin('tbl_inventory', 'tbl_inventory.id', '=', 'tbl_transaction.inventory_id')
                 ->join('tbl_customer as customer','customer.id','=','tbl_inventory.customer_id')
                 ->join('tbl_product as product','product.id', '=','tbl_inventory.product_id')
-                ->select('tbl_inventory.*','customer.first_name','customer.last_name','product.product_name','tbl_transaction.status')
+                ->select('tbl_inventory.*','customer.first_name','customer.last_name','product.product_name','tbl_transaction.status','customer.id as custid','tbl_transaction.amount','tbl_transaction.trasaction_date as tdate')
                 ->when (!empty($customerId) , function ($query) use($customerId){
                     return $query->where('tbl_inventory.customer_id',$customerId);
                     })
                 ->whereBetween('transaction_date', [$fromDate, $toDate])
-                ->orderBy('id','desc')
+                ->orderBy('tbl_inventory.id','desc')
+                ->orderBy('tbl_transaction.id','desc')
                 ->get();
-
+               
                 return datatables()->of($inventoryList)
                 ->editColumn('id', function ($inventoryList) {
                     return $inventoryList->id;
@@ -126,6 +127,11 @@ class ReportController extends Controller
                 ->addColumn('price', function ($inventoryList) {
                     return $inventoryList->price;
                 })
+
+                ->addColumn('tdate', function ($inventoryList) {
+                    return Carbon::parse($inventoryList->tdate)->format('d/m/Y');                                        
+                })
+                
                 ->editColumn('payment_mode', function ($inventoryList) {
                     return $inventoryList->status;
                 })
@@ -136,7 +142,7 @@ class ReportController extends Controller
                 ->editColumn('balance', function ($inventoryList) {
                     return ($inventoryList->total - $inventoryList->balance);
                 })
-                ->rawColumns(['id', 'customer_name', 'product_name', 'qty', 'total', 'balance', 'price','payment_mode'])
+                ->rawColumns(['tdate','id','custid', 'customer_name', 'product_name', 'qty', 'total', 'balance', 'price','payment_mode'])
                 ->make(true);
             } catch (\Throwable $th) {
                 return response()->json(['success'=>false,'error'=>$th->getMessage()]);

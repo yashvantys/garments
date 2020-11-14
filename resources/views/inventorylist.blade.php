@@ -378,8 +378,7 @@ $(document).ready(function () {
     function AddInventoryPayment(obj) {
        
         var id = $("#inventory_id").val();
-        var totalAmount = $('#totalAmountpaid').val(); 
-        alert(totalAmount);       
+        var totalAmount = $('#totalAmountpaid').val();              
         if (totalAmount == '') {
             $( '#showerrortxt' ).text( 'Please enter amount' ).show();                      
         } else {

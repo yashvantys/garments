@@ -17,7 +17,7 @@
     <select name="customer_id" id="customer_id" class="form-control">
                         <option value="">--- Select Customer ---</option>
                         @foreach ($customers as $key => $customer)
-                            <option value="{{ $customer->id }}">{{ $customer->first_name .' ' .$customer->last_name }}</option>
+                            <option value="{{ $customer->id }}">{{ $customer->id .':-'.$customer->first_name .' ' .$customer->last_name }}</option>
                         @endforeach
                         </select>
     </div>
@@ -47,6 +47,7 @@
                 <caption></caption>                
                 <thead>
                     <tr>
+                        <th scope="col"> Customer ID</th>
                         <th scope="col"> Customer Name</th>                 
                         <th scope="col"> Product Name</th>
                         <th scope="col"> Quantity</th>                        
@@ -172,6 +173,7 @@ $(document).ready(function () {
                     );
                 },                   
                 columns: [
+                    { "data": "custid", "name": "Customer ID"},
                     { "data": "customer_name", "name": "Customer Name"},                        
                     { "data": "product_name", "name": "Product Name"},
                     { "data": "qty", "name": "Quantity"}, 

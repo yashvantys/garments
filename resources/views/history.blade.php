@@ -17,7 +17,7 @@
     <select name="customer_id" id="customer_id" class="form-control">
                         <option value="">--- Select Customer ---</option>
                         @foreach ($customers as $key => $customer)
-                            <option value="{{ $customer->id }}">{{ $customer->first_name .' ' .$customer->last_name }}</option>
+                            <option value="{{ $customer->id }}">{{ $customer->id .':-'.$customer->first_name .' ' .$customer->last_name }}</option>
                         @endforeach
                         </select>
     </div>
@@ -43,10 +43,12 @@
                 <div class="table-responsive">
                 <div class="alert alert-success" id="showmsg" style="display:none"></div>
                 <div class="alert alert-danger" id="showerrormsg" style="display:none"></div>
-                <table id="report" class="booking-table table display">
+                <table id="history" class="booking-table table display transactionHistory">
                 <caption></caption>                
                 <thead>
                     <tr>
+                        <th scope="col"> </th>
+                        <th scope="col"> Customer ID</th>
                         <th scope="col"> Customer Name</th>                 
                         <th scope="col"> Product Name</th>
                         <th scope="col"> Quantity</th>                        
@@ -58,7 +60,9 @@
                     </thead>
                     <tfoot>
                     <tr>
-                        <th scope="col" colspan="4" style="text-align:right">Total:</th>
+                        <th scope="col" colspan="5" style="text-align:right">Total </th>
+                        <th scope="col"></th>
+                        <th scope="col"></th>
                         <th scope="col"></th>
                         <th scope="col"></th>
                     </tr>
@@ -121,7 +125,7 @@ $(document).ready(function () {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 }
             });
-            dataTable = $('#report').DataTable({
+            dataTable = $('#history').DataTable({
                 processing: true,
                 serverSide: true,
                 order: [],
@@ -134,7 +138,7 @@ $(document).ready(function () {
                     "info": "Showing page _PAGE_ of _PAGES_",
                 },
                 ajax: {
-                    url: '{{route('report-listing')}}',
+                    url: '{{route('history-listing')}}',
                     method: 'POST',
                     data: {
                         data:  JSON.stringify($('#report-search-form').serializeObject())
@@ -142,6 +146,7 @@ $(document).ready(function () {
                 },
                 "footerCallback": function ( row, data, start, end, display ) {
                     var api = this.api(), data;
+                    var apiBalance = this.api(), data;
         
                     // Remove the formatting to get integer data for summation
                     var intVal = function ( i ) {
@@ -152,7 +157,7 @@ $(document).ready(function () {
                     }; 
                     // Total over all pages
                     total = api
-                        .column( 4 )
+                        .column( 6 )
                         .data()
                         .reduce( function (a, b) {
                             return intVal(a) + intVal(b);
@@ -160,18 +165,44 @@ $(document).ready(function () {
         
                     // Total over this page
                     pageTotal = api
-                        .column( 4, { page: 'current'} )
+                        .column( 6, { page: 'current'} )
                         .data()
                         .reduce( function (a, b) {
                             return intVal(a) + intVal(b);
                         }, 0 );
         
                     // Update footer
-                    $( api.column( 4 ).footer() ).html(
-                        'Rs:'+pageTotal 
+                    $( api.column( 6 ).footer() ).html(
+                        'Rs: '+pageTotal 
+                    );
+                    totalBalance = apiBalance
+                        .column( 7 )
+                        .data()
+                        .reduce( function (a, b) {
+                            return intVal(a) + intVal(b);
+                        }, 0 );
+        
+                    // Total over this page
+                    pageTotal1 = apiBalance
+                        .column( 7, { page: 'current'} )
+                        .data()
+                        .reduce( function (a, b) {
+                            return intVal(a) + intVal(b);
+                        }, 0 );
+        
+                    // Update footer
+                    $( apiBalance.column( 7 ).footer() ).html(
+                        'Rs: '+pageTotal1 
                     );
                 },                   
                 columns: [
+                    {
+                    'className':      'detail-control',
+                    'orderable':      false,
+                    'data':           null,
+                    'defaultContent': ''
+                    },
+                    { "data": "custid", "name": "Customer ID"},
                     { "data": "customer_name", "name": "Customer Name"},                        
                     { "data": "product_name", "name": "Product Name"},
                     { "data": "qty", "name": "Quantity"}, 
@@ -185,8 +216,63 @@ $(document).ready(function () {
             });
         }
         $("#searchbox").keyup(function() {
-            $('#report').dataTable().fnFilter(this.value);
+            $('#history').dataTable().fnFilter(this.value);
         });
+
+        // Add event listener for opening and closing details
+    $('.transactionHistory tbody').on('click', 'tr td.detail-control', function () {
+        var tr = $(this).closest('tr');
+        var row = dataTable.row( tr );
+
+        if ( row.child.isShown() ) {
+            // This row is already open - close it
+            row.child.hide();
+            tr.removeClass('shown');
+        }
+        else {
+            // Open this row
+            row.child( format(row.data()) ).show();
+            tr.addClass('shown');
+        }
+    });
+
+     // Add event listener for opening and closing details for confirmed
+     $('.confirmedPropertyBooking tbody').on('click', 'tr td.details-control', function () {
+        var tr = $(this).closest('tr');
+        var row = confirmedPropertyBookingdataTable.row( tr );
+
+        if ( row.child.isShown() ) {
+            // This row is already open - close it
+            row.child.hide();
+            tr.removeClass('shown');
+        }
+        else {
+            // Open this row
+            row.child( confirmedFormat(row.data()) ).show();
+            tr.addClass('shown');
+        }
+    });
+
+    function format ( d ) {
+        // `d` is the original data object for the row
+        let phone = (d.phone==null) ? '' : d.phone;
+        let email = (d.email==null) ? '' : d.email;
+
+
+        return '<div class="table-responsive inner"><table class="inner" id="extraInfo" >'+
+                '<tr>'+
+                '<td></td>'+
+                '<td></td>'+
+                '<td></td>'+
+                '<td></td>'+
+                '<td>Date: '+d.tdate + '</td>'+
+                '<td>Amount: '+d.amount+'</td>'+
+                '<td>'+d.status+'</td>'+
+                '<td></td>'+
+                '</tr>'+
+                '</table>'+
+                '</div>';
+    }    
     });
 </script>
 @endsection

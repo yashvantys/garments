@@ -407,3 +407,11 @@ label span {
         padding-bottom: 6px;
     }
 }
+
+td.detail-control, td.details-control {
+    background: url(../media/images/details_open.png) no-repeat center center;
+    cursor: pointer;
+}
+tr.shown td.detail-control, tr.shown td.details-control {
+    background: url(../media/images/details_close.png) no-repeat center center;
+}
